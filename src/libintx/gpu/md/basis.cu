@@ -8,7 +8,8 @@
 #include "libintx/config.h"
 #include "libintx/utility.h"
 #include "libintx/math.h"
-#include <numbers>
+
+#include <functional>
 
 namespace libintx::gpu::md {
 
@@ -18,6 +19,12 @@ namespace libintx::gpu::md {
   __device__
   constexpr auto orbitals = hermite::orbitals<2*LMAX>;
 
+  struct Gaussian2 {
+    Gaussian first, second;
+    struct {
+      array<double,3> first, second;
+    } r;
+  };
 
   template<int A, int B>
   struct pure_transform_term {
@@ -85,9 +92,10 @@ namespace libintx::gpu::md {
       return v;
     }
 
+    template<typename G>
     __device__
-    void init(double a, double b, const auto &r, const auto &thread_group) {
-      static_assert(thread_group.size() >= (A+B+1));
+    void init(double a, double b, const auto &r, const G &thread_group) {
+      static_assert(G::size() >= (A+B+1));
       auto p = a + b;
       assert(p);
       auto q = ((a ? a : 1)*(b ? b : 1))/p;
@@ -146,7 +154,15 @@ namespace libintx::gpu::md {
     constexpr int DimY = ThreadBlock::y;
     constexpr int NP = nherm2(A+B);
 
-    __shared__ Gaussian2 ab;
+    __shared__
+    union shmem {
+      Gaussian2 ab;
+      __device__ shmem() {}
+    } shmem;
+
+    //__shared__ Gaussian2 ab;
+    auto &ab = shmem.ab;
+
     memcpy1(&gbasis[blockIdx.x], &ab, thread_block);
     thread_block.sync();
 
