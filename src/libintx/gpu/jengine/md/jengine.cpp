@@ -1,5 +1,6 @@
 #include "libintx/gpu/jengine/md/jengine.h"
 #include "libintx/gpu/jengine/md/forward.h"
+#include "libintx/gpu/boys.h"
 #include "libintx/engine/md/hermite.h"
 
 #include "libintx/utility.h"
@@ -341,7 +342,9 @@ namespace libintx::gpu::jengine::md {
         int K = A.K*B.K;
         int n = nbf(A)*nbf(B);
         ijs.push_back(
-          { i, j,
+          {
+            .first=i,
+            .second=j,
             .L={A.L,B.L},
             .kbf=(int)kbf,
             .kprim=(int)kprim,
@@ -519,7 +522,9 @@ namespace libintx::gpu::jengine::md {
         int K = A.K*B.K;
         int n = nbf(A)*nbf(B);
         ijs0.push_back(
-          { i, j,
+          {
+            .first=i,
+            .second=j,
             .L={A.L,B.L},
             .kbf=(int)kbf,
             .kprim=(int)kprim,
